@@ -26,62 +26,59 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         'href': 'hrefChanged',
       },
 
-      computed: {
-        'url': '_getUrl(href)',
-        'loaded': '_getLoaded(href)',
-        'content': '_getContent(href)',
-      },
-
       created: function() {
         this.baseUri = this.ownerDocument.baseURI;
       },
 
+      configure: function() {
+        return {
+          url: null,
+          loaded: false,
+          content: null,
+          request: null,
+        };
+      },
+
       _requestAsset: function() {
-        var url = this._getUrl();
-        var request = this._getRequest();
+        var urlString = this.url.toString();
+        var request = requests.get(urlString);
+
         if (request == null) {
-          request = new XMLHttpRequest();
-          requests.set(url.toString(), request);
-          request.open("GET", url.toString(), true);
+          this.request = request = new XMLHttpRequest();
+          requests.set(urlString, request);
+          request.open('GET', urlString, true);
           request.send();
-          request.addEventListener('load', this._fire.bind(this));
+          this._listen();
         } else if (request.readyState == 4) {
           this._fire();
         } else {
-          request.addEventListener('load', this._fire.bind(this));
+          this._listen();
         }
       },
 
+      _listen: function() {
+        // listen must only be called on a incomplete request
+        this.loaded = false;
+        this.content = null;
+
+        this.request.addEventListener('load', (function(e) {
+
+          this.content = this.request.response;
+          this.loaded = true;
+
+          var event = new CustomEvent('content-loaded', {
+            detail: {
+              content: this.content,
+            } 
+          });
+          this.dispatchEvent(event);
+        }).bind(this));
+      },
+
       hrefChanged: function(newValue, oldValue) {
+        this.url = new URL(this.href, this.baseUri);
         this._requestAsset();
       },
-
-      _getUrl: function() {
-        return new URL(this.href, this.baseUri);
-      },
-
-      _getRequest: function() {
-        return requests.get(this._getUrl().toString());
-      },
-
-      _getContent: function() {
-        var request = this._getRequest();
-        return request == null ? null : request.response;
-      },
-
-      _getLoaded: function() {
-        var request = this._getRequest();
-        return request != null && request.readyState == 4;
-      },
-
-      _fire: function(e) {
-        var event = new CustomEvent('content-loaded', { 
-          detail: {
-            content: this._getContent()
-          } 
-        });
-        this.dispatchEvent(event);
-      }
 
     });
   })(window);
