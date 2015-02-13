@@ -26,6 +26,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         'href': 'hrefChanged',
       },
 
+      created: function() {
+        this.baseUri = this.ownerDocument.baseURI;
+      },
+
       configure: function() {
         return {
           url: null,
@@ -35,30 +39,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         };
       },
 
-      _resolvePath: function(urlPath) {
-        // find <dom-module>
-        var domModule = this._template.parentNode;
-
-        // set by vulcanize to represent original paths before inlining
-        var assetPath = domModule.getAttribute('assetpath');
-        var moduleBase = domModule.ownerDocument.baseURI;
-
-        if (assetPath) {
-          // original path to <dom-module> from html import
-          moduleBase = new URL(assetPath, moduleBase).href;
-        }
-
-        var outUrl = new URL(urlPath, moduleBase);
-        return outUrl.href;
-      },
-
       _requestAsset: function() {
-        var request = requests.get(this.url);
+        var urlString = this.url.toString();
+        var request = requests.get(urlString);
 
-        if (request === null) {
+        if (request == null) {
           this.request = request = new XMLHttpRequest();
           requests.set(urlString, request);
-          request.open('GET', this.url, true);
+          request.open('GET', urlString, true);
           request.send();
           this._listen();
         } else if (request.readyState == 4) {
@@ -81,14 +69,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var event = new CustomEvent('content-loaded', {
             detail: {
               content: this.content,
-            }
+            } 
           });
           this.dispatchEvent(event);
         }).bind(this));
       },
 
       hrefChanged: function(newValue, oldValue) {
-        this.url = this._resolvePath(this.href);
+        this.url = new URL(this.href, this.baseUri);
         this._requestAsset();
       },
 
