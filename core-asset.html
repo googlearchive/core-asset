@@ -28,6 +28,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 
       created: function() {
         this.baseUri = this.ownerDocument.baseURI;
+        this._loadedPromise = new Promise((function(resolve, reject) {
+          this._resolveLoad = resolve;
+          this._rejectLoad = reject;
+        }).bind(this));
       },
 
       configure: function() {
@@ -37,6 +41,10 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           content: null,
           request: null,
         };
+      },
+
+      load: function() {
+        return this._loadedPromise;
       },
 
       _requestAsset: function() {
@@ -69,10 +77,21 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           var event = new CustomEvent('content-loaded', {
             detail: {
               content: this.content,
-            } 
+            }
           });
           this.dispatchEvent(event);
+
+          this._resolveLoad(this.content);
         }).bind(this));
+
+        this.request.addEventListener('error', function (error) {
+          this._rejectLoad(error)
+        }.bind(this));
+
+        this.request.addEventListener('abort', function () {
+          this._rejectLoad(new Error('Request for asset aborted.'));
+        }.bind(this));
+
       },
 
       hrefChanged: function(newValue, oldValue) {
