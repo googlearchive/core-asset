@@ -18,12 +18,40 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
     global.CoreAsset = Polymer({
       is: 'core-asset',
 
-      published: {
-        'href': String
-      },
+      properties: {
 
-      bind: {
-        'href': 'hrefChanged',
+        /**
+         * The asset URL as a String.
+         */
+        href: {
+          type: String,
+          observer: 'hrefChanged',
+          value: null,
+        },
+
+        /**
+         * The asset URL as a URL.
+         */
+        url: {
+          type: URL,
+          value: null,
+        },
+
+        /**
+         * Whether or not the asset has been loaded.
+         */
+        loaded: {
+          type: Boolean,
+          value: false,
+        },
+
+        /**
+         * The XMLHttpRequest object.
+         */
+        request: {
+          type: Object,
+          // value: null,
+        }
       },
 
       created: function() {
@@ -32,15 +60,6 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
           this._resolveLoad = resolve;
           this._rejectLoad = reject;
         }).bind(this));
-      },
-
-      configure: function() {
-        return {
-          url: null,
-          loaded: false,
-          content: null,
-          request: null,
-        };
       },
 
       load: function() {
