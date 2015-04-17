@@ -7,5 +7,5 @@ processed in any way.
 
 ## Status
 
-core-ass is experimental and speculative. It may be removed in favor of another
+core-asset is experimental and speculative. It may be removed in favor of another
 approach like core-request. Use at your own risk.
