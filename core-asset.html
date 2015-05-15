@@ -25,7 +25,7 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
          */
         href: {
           type: String,
-          observer: 'hrefChanged',
+          observer: '_hrefChanged',
           value: null,
         },
 
@@ -84,22 +84,14 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
       },
 
       _listen: function() {
-        // listen must only be called on a incomplete request
+        // _listen() must only be called on an _incomplete_ request.
         this.loaded = false;
         this.content = null;
 
         this.request.addEventListener('load', (function(e) {
-
           this.content = this.request.response;
           this.loaded = true;
-
-          var event = new CustomEvent('content-loaded', {
-            detail: {
-              content: this.content,
-            }
-          });
-          this.dispatchEvent(event);
-
+          this.fire('content-loaded', {content: this.content});
           this._resolveLoad(this.content);
         }).bind(this));
 
@@ -110,10 +102,9 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
         this.request.addEventListener('abort', function () {
           this._rejectLoad(new Error('Request for asset aborted.'));
         }.bind(this));
-
       },
 
-      hrefChanged: function(newValue, oldValue) {
+      _hrefChanged: function(newValue, oldValue) {
         this.url = new URL(this.href, this.baseUri);
         this._requestAsset();
       },
